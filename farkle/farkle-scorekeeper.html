@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farkle Scorekeeper</title>
+    <style>
+        :root {
+            --primary: #8e44ad;
+            --secondary: #9b59b6;
+            --danger: #c0392b;
+            --success: #27ae60;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --action: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            user-select: none; /* Prevents double-tap zooming on some phones */
+        }
+
+        h1 { margin: 10px 0; font-size: 1.5rem; letter-spacing: 2px; }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .player-card {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+            max-width: 150px;
+            border: 2px solid transparent;
+        }
+
+        .player-card.active {
+            border-color: var(--action);
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 0 10px var(--action);
+        }
+
+        .score-val { font-size: 2rem; font-weight: bold; }
+        .p-name { font-size: 0.8rem; text-transform: uppercase; }
+
+        /* Turn Status */
+        .turn-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .pot-label { font-size: 0.9rem; opacity: 0.8; }
+        .pot-score { 
+            font-size: 3.5rem; 
+            color: var(--action); 
+            font-weight: bold; 
+            line-height: 1;
+            margin: 5px 0;
+        }
+        
+        /* The Selection Area */
+        .selection-area {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            min-height: 80px;
+        }
+
+        .preview-text { font-size: 0.9rem; color: #bdc3c7; margin-bottom: 5px;}
+        .preview-score { font-size: 1.5rem; color: var(--success); font-weight: bold; }
+        
+        .selected-dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+            min-height: 30px;
+        }
+
+        .mini-die {
+            width: 30px;
+            height: 30px;
+            background: var(--light);
+            color: var(--dark);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Controls */
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-die {
+            background: var(--light);
+            color: var(--dark);
+            border: none;
+            border-radius: 8px;
+            padding: 15px 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-die:active { transform: scale(0.95); background: #bdc3c7; }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        button.action-btn {
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn-submit { background-color: var(--primary); }
+        .btn-bank { background-color: var(--success); font-size: 1.2rem; }
+        .btn-farkle { background-color: var(--danger); }
+        .btn-clear { background-color: #7f8c8d; }
+
+        /* History/Log */
+        #msg-log {
+            margin-top: 15px;
+            color: var(--danger);
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>FARKLE</h1>
+
+    <div class="scoreboard">
+        <div class="player-card active" id="p1-card">
+            <div class="p-name">Player 1</div>
+            <div class="score-val" id="score-0">0</div>
+        </div>
+        <div class="player-card" id="p2-card">
+            <div class="p-name">Player 2</div>
+            <div class="score-val" id="score-1">0</div>
+        </div>
+    </div>
+
+    <div class="turn-box">
+        <div class="pot-label">TURN SCORE</div>
+        <div class="pot-score" id="turn-score">0</div>
+    </div>
+
+    <div class="selection-area">
+        <div class="preview-text">Dice you are keeping:</div>
+        <div class="selected-dice-container" id="selection-container"></div>
+        <div class="preview-text" style="margin-top:5px">Selection Value:</div>
+        <div class="preview-score" id="selection-value">0</div>
+    </div>
+
+    <div class="dice-grid">
+        <button class="btn-die" onclick="addDie(1)">1</button>
+        <button class="btn-die" onclick="addDie(2)">2</button>
+        <button class="btn-die" onclick="addDie(3)">3</button>
+        <button class="btn-die" onclick="addDie(4)">4</button>
+        <button class="btn-die" onclick="addDie(5)">5</button>
+        <button class="btn-die" onclick="addDie(6)">6</button>
+    </div>
+
+    <div class="actions">
+        <div class="row-actions">
+            <button class="action-btn btn-clear" onclick="clearSelection()">Clr</button>
+            <button class="action-btn btn-submit" onclick="submitSelection()">Add to Turn</button>
+        </div>
+        
+        <div class="row-actions">
+            <button class="action-btn btn-farkle" onclick="farkle()">FARKLE (Bust)</button>
+            <button class="action-btn btn-bank" onclick="bank()">BANK POINTS</button>
+        </div>
+    </div>
+
+    <div id="msg-log"></div>
+
+    <script>
+        let scores = [0, 0];
+        let currentTurnScore = 0;
+        let activePlayer = 0;
+        let currentSelection = []; // Stores the dice user is currently tapping
+
+        const uiTurnScore = document.getElementById('turn-score');
+        const uiSelectionContainer = document.getElementById('selection-container');
+        const uiSelectionValue = document.getElementById('selection-value');
+        const uiMsg = document.getElementById('msg-log');
+
+        function updateBoard() {
+            document.getElementById('score-0').innerText = scores[0];
+            document.getElementById('score-1').innerText = scores[1];
+            uiTurnScore.innerText = currentTurnScore;
+            
+            document.getElementById('p1-card').classList.toggle('active', activePlayer === 0);
+            document.getElementById('p2-card').classList.toggle('active', activePlayer === 1);
+        }
+
+        // Add a die to the temporary selection
+        function addDie(face) {
+            if (currentSelection.length < 6) {
+                currentSelection.push(face);
+                updateSelectionUI();
+            }
+        }
+
+        function clearSelection() {
+            currentSelection = [];
+            updateSelectionUI();
+        }
+
+        // Calculate score based on standard Farkle rules
+        function calculatePoints(dice) {
+            let score = 0;
+            let counts = [0, 0, 0, 0, 0, 0, 0]; // Index 1-6
+            
+            dice.forEach(d => counts[d]++);
+
+            // 1. Check for Triples (Standard Rule: 3 of a kind)
+            // 1s = 1000, Others = 100 * face
+            if (counts[1] >= 3) { score += 1000; counts[1] -= 3; }
+            if (counts[2] >= 3) { score += 200; counts[2] -= 3; }
+            if (counts[3] >= 3) { score += 300; counts[3] -= 3; }
+            if (counts[4] >= 4) { score += 400; counts[4] -= 3; } // Typo fix: logic usually 3
+            if (counts[4] >= 3) { score += 400; counts[4] -= 3; }
+            if (counts[5] >= 3) { score += 500; counts[5] -= 3; }
+            if (counts[6] >= 3) { score += 600; counts[6] -= 3; }
+
+            // 2. Check for remaining singles
+            // Single 1s = 100 each
+            score += counts[1] * 100;
+            // Single 5s = 50 each
+            score += counts[5] * 50;
+
+            // Note: This does not automatically detect Straights (1-6) or 3 Pairs
+            // because those usually require rolling all 6 at once. 
+            // If you need that, simply enter the score manually or hit buttons to sum up.
+            
+            return score;
+        }
+
+        function updateSelectionUI() {
+            // Visual dice
+            uiSelectionContainer.innerHTML = '';
+            currentSelection.forEach(num => {
+                let d = document.createElement('div');
+                d.className = 'mini-die';
+                d.innerText = num;
+                uiSelectionContainer.appendChild(d);
+            });
+
+            // Calculate preview score
+            const val = calculatePoints(currentSelection);
+            uiSelectionValue.innerText = val;
+        }
+
+        function submitSelection() {
+            const points = calculatePoints(currentSelection);
+            if (points === 0 && currentSelection.length > 0) {
+                uiMsg.innerText = "Those dice aren't worth points!";
+                return;
+            }
+            if (currentSelection.length === 0) return;
+
+            currentTurnScore += points;
+            currentSelection = []; // Clear selection buffer
+            uiMsg.innerText = "";
+            updateSelectionUI();
+            updateBoard();
+        }
+
+        function farkle() {
+            uiMsg.innerText = "FARKLE! Next player.";
+            currentTurnScore = 0;
+            currentSelection = [];
+            updateSelectionUI();
+            switchPlayer();
+        }
+
+        function bank() {
+            if (currentTurnScore === 0) {
+                uiMsg.innerText = "You have 0 points to bank!";
+                return;
+            }
+            scores[activePlayer] += currentTurnScore;
+            
+            // Win condition (Standard 10,000 but usually configurable. Setting 10k as default)
+            if (scores[activePlayer] >= 10000) {
+                uiMsg.style.color = "var(--success)";
+                uiMsg.innerText = `PLAYER ${activePlayer + 1} WINS!`;
+            } else {
+                uiMsg.innerText = `Banked ${currentTurnScore}! Next player.`;
+                switchPlayer();
+            }
+            
+            currentTurnScore = 0;
+            currentSelection = [];
+            updateSelectionUI();
+        }
+
+        function switchPlayer() {
+            activePlayer = activePlayer === 0 ? 1 : 0;
+            updateBoard();
+            // Clear message after a few seconds
+            setTimeout(() => {
+                if(!uiMsg.innerText.includes("WINS")) uiMsg.innerText = "";
+            }, 2000);
+        }
+
+        // Init
+        updateBoard();
+    </script>
+</body>
+</html>

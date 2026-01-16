@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANK - The Dice Game</title>
+    <style>
+        :root {
+            --felt-green: #27ae60;
+            --dark-green: #1e8449;
+            --gold: #f1c40f;
+            --danger: #e74c3c;
+            --white: #ffffff;
+            --text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Retro casino vibe */
+            background-color: var(--felt-green);
+            color: var(--white);
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: var(--text-shadow);
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .player-card {
+            background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+            flex: 1;
+            position: relative;
+        }
+
+        .player-card.active {
+            background: rgba(0,0,0,0.4);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        .score { font-size: 2.5rem; font-weight: bold; font-family: sans-serif; }
+        .p-label { font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 5px; display: block;}
+
+        /* The Pot */
+        .pot-container {
+            background: var(--dark-green);
+            padding: 20px;
+            border-radius: 50%;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 5px dashed rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .pot-label { text-transform: uppercase; font-size: 0.9rem; opacity: 0.8; }
+        .pot-amount { font-size: 3.5rem; font-weight: bold; color: var(--gold); text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+
+        /* Dice Input Area */
+        .dice-visuals {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 15px;
+            height: 50px;
+        }
+
+        .die-box {
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: rgba(255,255,255,0.1);
+        }
+        .die-box.filled { background: white; color: black; border-color: white; }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+        button:active { transform: translateY(4px); box-shadow: none; }
+
+        .btn-num { background: white; color: #333; }
+        
+        .btn-bank {
+            grid-column: span 3;
+            background-color: var(--gold);
+            color: #d35400;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+
+        .message-box {
+            height: 30px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--gold);
+            font-family: sans-serif;
+        }
+
+        .winner-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .btn-reset { background: var(--danger); color: white; margin-top: 20px; }
+
+    </style>
+</head>
+<body>
+
+    <h1>$$ BANK $$</h1>
+
+    <div class="scoreboard">
+        <div class="player-card active" id="p1-card">
+            <span class="p-label">PLAYER 1</span>
+            <div class="score" id="score-0">0</div>
+        </div>
+        <div class="player-card" id="p2-card">
+            <span class="p-label">PLAYER 2</span>
+            <div class="score" id="score-1">0</div>
+        </div>
+    </div>
+
+    <div class="pot-container">
+        <span class="pot-label">At Risk</span>
+        <div class="pot-amount" id="pot-display">0</div>
+    </div>
+
+    <div class="message-box" id="msg"></div>
+
+    <div class="dice-visuals">
+        <div class="die-box" id="d1">?</div>
+        <div class="die-box" id="d2">?</div>
+    </div>
+
+    <p style="font-size: 0.8rem; opacity: 0.6;">Tap the two numbers you rolled:</p>
+
+    <div class="keypad">
+        <button class="btn-num" onclick="input(1)">1</button>
+        <button class="btn-num" onclick="input(2)">2</button>
+        <button class="btn-num" onclick="input(3)">3</button>
+        <button class="btn-num" onclick="input(4)">4</button>
+        <button class="btn-num" onclick="input(5)">5</button>
+        <button class="btn-num" onclick="input(6)">6</button>
+        
+        <button class="btn-bank" onclick="bank()">BANK IT! 💰</button>
+    </div>
+
+    <div class="winner-modal" id="winner-screen">
+        <h1 style="color: var(--gold)">WINNER!</h1>
+        <h2 id="winner-text">Player 1</h2>
+        <button class="btn-reset" onclick="resetGame()">NEW GAME</button>
+    </div>
+
+    <script>
+        let scores = [0, 0];
+        let pot = 0;
+        let activePlayer = 0;
+        let buffer = []; // Stores the 2 dice inputs
+        const winningScore = 100;
+
+        const uiPot = document.getElementById('pot-display');
+        const uiMsg = document.getElementById('msg');
+        const uiD1 = document.getElementById('d1');
+        const uiD2 = document.getElementById('d2');
+
+        function updateUI() {
+            document.getElementById('score-0').innerText = scores[0];
+            document.getElementById('score-1').innerText = scores[1];
+            uiPot.innerText = pot;
+            
+            document.getElementById('p1-card').classList.toggle('active', activePlayer === 0);
+            document.getElementById('p2-card').classList.toggle('active', activePlayer === 1);
+        }
+
+        function input(num) {
+            uiMsg.innerText = "";
+            if (buffer.length < 2) {
+                buffer.push(num);
+                
+                // Visual update
+                if(buffer.length === 1) {
+                    uiD1.innerText = num;
+                    uiD1.classList.add('filled');
+                    uiD2.innerText = "?";
+                    uiD2.classList.remove('filled');
+                } else if (buffer.length === 2) {
+                    uiD2.innerText = num;
+                    uiD2.classList.add('filled');
+                    setTimeout(processRoll, 150);
+                }
+            }
+        }
+
+        function processRoll() {
+            const d1 = buffer[0];
+            const d2 = buffer[1];
+            const sum = d1 + d2;
+            buffer = [];
+
+            // THE RULE: If Sum is 7, you BUST.
+            if (sum === 7) {
+                uiMsg.style.color = "var(--danger)";
+                uiMsg.innerText = `ROLLED A 7! BUST!`;
+                pot = 0; // Lost the pot
+                setTimeout(switchPlayer, 1500);
+            } else {
+                // Safe roll
+                pot += sum;
+                uiMsg.style.color = "var(--gold)";
+                // uiMsg.innerText = `Safe! (${sum})`;
+                
+                // Clear dice after a moment
+                setTimeout(() => {
+                    uiD1.classList.remove('filled');
+                    uiD2.classList.remove('filled');
+                    uiD1.innerText = "?";
+                    uiD2.innerText = "?";
+                }, 500);
+            }
+            updateUI();
+        }
+
+        function bank() {
+            if (pot === 0 && buffer.length === 0) {
+                uiMsg.style.color = "white";
+                uiMsg.innerText = "Roll first!";
+                return;
+            }
+
+            scores[activePlayer] += pot;
+            pot = 0;
+            
+            if (scores[activePlayer] >= winningScore) {
+                document.getElementById('winner-text').innerText = `PLAYER ${activePlayer + 1}`;
+                document.getElementById('winner-screen').style.display = 'flex';
+            } else {
+                uiMsg.style.color = "var(--gold)";
+                uiMsg.innerText = "POINTS BANKED!";
+                switchPlayer();
+            }
+            updateUI();
+            
+            // Clear dice
+            uiD1.classList.remove('filled');
+            uiD2.classList.remove('filled');
+            uiD1.innerText = "?";
+            uiD2.innerText = "?";
+        }
+
+        function switchPlayer() {
+            activePlayer = activePlayer === 0 ? 1 : 0;
+            pot = 0;
+            buffer = [];
+            uiD1.classList.remove('filled');
+            uiD2.classList.remove('filled');
+            uiD1.innerText = "?";
+            uiD2.innerText = "?";
+            updateUI();
+        }
+
+        function resetGame() {
+            scores = [0, 0];
+            pot = 0;
+            activePlayer = 0;
+            buffer = [];
+            document.getElementById('winner-screen').style.display = 'none';
+            uiMsg.innerText = "";
+            updateUI();
+        }
+
+    </script>
+</body>
+</html>

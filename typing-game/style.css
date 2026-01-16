@@ -1,0 +1,81 @@
+body {
+    background-color: #f4f4f4;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    background-color: #2c3e50;
+    color: white;
+    width: 500px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    text-align: center;
+    position: relative;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+#word-container {
+    background-color: #34495e;
+    height: 300px;
+    position: relative; /* Essential for absolute positioning of words inside */
+    overflow: hidden;   /* Hides words if they go outside boundaries */
+    border: 2px solid #ecf0f1;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+/* The style for the falling words */
+.word {
+    position: absolute;
+    color: #f1c40f; /* Yellow text */
+    font-weight: bold;
+    font-size: 18px;
+    padding: 5px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    transform: translateX(-50%); /* Centers the word on its X coordinate */
+}
+
+input {
+    width: 80%;
+    padding: 15px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+}
+
+#end-game-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}

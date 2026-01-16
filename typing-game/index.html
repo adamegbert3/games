@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Rain</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Typing Rain</h1>
+        
+        <div class="header">
+            <h3>Score: <span id="score">0</span></h3>
+            <h3>Time Left: <span id="time">10s</span></h3>
+        </div>
+
+        <div id="word-container"></div>
+
+        <input type="text" id="text" placeholder="Type here..." autocomplete="off" autofocus>
+        
+        <div id="end-game-container" style="display: none;">
+            <h2>Game Over!</h2>
+            <p>Your final score: <span id="final-score">0</span></p>
+            <button onclick="location.reload()">Play Again</button>
+        </div>
+
+        <br>
+        <a href="../index.html" style="color: #333; text-decoration: none;">← Back to Arcade</a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
